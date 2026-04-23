@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this directory is
 
-`arc_mono/` is **not a monorepo** — it is a workspace folder that colocates four independent git repositories. There is no top-level `package.json`, `Makefile`, `pyproject.toml`, or shared tooling here. Run commands from inside the relevant sub-repo.
+`arc_workspace/` is **not a monorepo** — it is a workspace folder that colocates four independent git repositories. There is no top-level `package.json`, `Makefile`, `pyproject.toml`, or shared tooling here. Run commands from inside the relevant sub-repo.
 
 | Sub-repo            | Role                                                                                      | Stack                                                   |
 | ------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `arcsite_web/`      | Frontend monorepo: `web`, `web2`, `h5`, `enterprise`, email `server`, shared `packages/*` | pnpm workspace + Turbo, React 18/19, Vite/Next.js       |
 | `cloudservice/`     | ArcSite main cloud backend + React `admin-frontend/`                                      | Django + SQLAlchemy/Alembic (uv), MySQL; admin uses Bun |
 | `arc_dep_cluster/`  | Ansible + Docker Swarm deployment/infra for the whole application stack (test / prod)     | Ansible, Docker Swarm, AWS ECR, Graylog, Datadog        |
+
+> The workspace root itself is a thin git repo that `.gitignore`s all four sub-repos — it only tracks this file and workspace metadata. `git status` / `git log` here will not reflect changes inside the sub-repos; `cd` into the sub-repo to use git.
 
 Each sub-repo has its own `CLAUDE.md` (symlinked to `AGENTS.md`) — **read the nested one for anything repo-specific**:
 
