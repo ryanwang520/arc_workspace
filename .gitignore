@@ -2,5 +2,6 @@ arc_agent/
 arcsite_web/
 cloudservice/
 arc_dep_cluster/
+documenso/
 
 .DS_Store
