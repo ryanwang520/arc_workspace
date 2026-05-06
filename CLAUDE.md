@@ -32,3 +32,17 @@ Each sub-repo has its own `CLAUDE.md` (symlinked to `AGENTS.md`) — **read the 
 - **Different package managers are load-bearing:** `cloudservice` uses `uv` + `just` + `bun` (admin only); `arc_agent` uses `uv` + `bun` + `make`; `arcsite_web` uses `pnpm` exclusively (never npm/yarn); `arc_dep_cluster` uses `ansible` + `make`.
 - **Cross-repo contracts are informal.** The agent's mobile endpoint (`POST /api/ai/fence/propose_products` in `arc_agent/apps/api`) is consumed by ArcSite mobile clients; `cloudservice` is the upstream auth/data service that `arc_agent` and `arcsite_web` both integrate with; `arc_dep_cluster` deploys the built images of the other three but is driven by git-branch/tag conventions, not a shared build system. There is no shared type system between them — check both ends when changing a contract.
 - **Don't leak changes across repos.** A change in one sub-repo should not touch files in another; each has independent history, CI, and deploy (`deploy.yml` per sub-repo). The application sub-repos each ship their own `deploy.yml`; `arc_dep_cluster` owns stack-level orchestration (Swarm services, node labels, nginx/redis/graylog playbooks).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as markdown files under `.scratch/<feature>/` at the workspace root. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), written as a `Status:` line at the top of each issue file. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the workspace root. See `docs/agents/domain.md`.
