@@ -11,7 +11,7 @@ A single SKU in an org's catalog. Belongs to exactly one **Org**.
 _Avoid_: SKU, item, listing.
 
 **Catalog**:
-The full product list owned by one **Org**. A few hundred to ~20k.
+The full product list owned by one **Org**. A few hundred to ~20k. Authored in **cloudservice** (source of truth); **arc_agent** holds a read-only synced view used for BOM generation. The view is eventually consistent — see `docs/adr/0003-catalog-sync-snapshot-reconcile.md`.
 
 **Org**:
 A fence company using ArcSite. Each org has its own independent **Catalog**.
