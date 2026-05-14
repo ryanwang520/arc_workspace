@@ -3,5 +3,8 @@ arcsite_web/
 cloudservice/
 arc_dep_cluster/
 documenso/
+select_product/
+artifacts-gallery/
+skills/
 
 .DS_Store

@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Product pre-filter — thread recap</title>
+<style>
+:root {
+  --ivory:    #FAF9F5;
+  --slate:    #141413;
+  --clay:     #D97757;
+  --oat:      #E3DACC;
+  --olive:    #788C5D;
+  --gray-150: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --white:    #FFFFFF;
+
+  --serif: ui-serif, Georgia, 'Times New Roman', serif;
+  --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: var(--sans);
+  background: var(--ivory);
+  color: var(--gray-700);
+  line-height: 1.55;
+  margin: 0;
+  padding: 56px 32px 120px;
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: 1040px; margin: 0 auto; }
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin: 0 0 12px;
+}
+h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 1.15;
+  color: var(--slate);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.meta {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  font-family: var(--mono); font-size: 12.5px; color: var(--gray-500);
+  margin-top: 12px;
+}
+.meta strong { color: var(--gray-700); font-weight: 500; }
+
+.toc {
+  position: sticky; top: 32px;
+  border-left: 1px solid var(--gray-300);
+  padding-left: 18px;
+  font-size: 13px;
+}
+.toc-label {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gray-500); margin: 0 0 12px;
+}
+.toc a {
+  display: block; padding: 4px 0; color: var(--gray-700); text-decoration: none;
+}
+.toc a:hover { color: var(--clay); }
+
+h2 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 24px; color: var(--slate);
+  margin: 40px 0 16px;
+  letter-spacing: -0.005em;
+}
+
+.tldr {
+  background: var(--gray-150);
+  border-left: 3px solid var(--clay);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 22px;
+  margin: 20px 0 36px;
+}
+.tldr p {
+  font-size: 15.5px; line-height: 1.6; color: var(--slate);
+  margin: 0 0 10px;
+}
+.tldr p:last-child { margin-bottom: 0; }
+
+.topic-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  font-family: var(--mono); font-size: 12.5px; text-decoration: none;
+  border: 1px solid var(--gray-300); color: var(--gray-700);
+  background: var(--white);
+}
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-500); }
+.chip:hover { border-color: var(--gray-500); }
+
+.decision {
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  background: var(--white);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+}
+.decision-head { margin-bottom: 14px; }
+.decision-num {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--gray-500);
+  display: block; margin-bottom: 4px;
+}
+.decision h3 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 21px; color: var(--slate);
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+.options { list-style: none; margin: 12px 0 16px; padding: 0; }
+.opt {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  align-items: baseline;
+}
+.opt strong { color: var(--slate); font-weight: 500; }
+.opt-note { display: block; color: var(--gray-700); font-size: 14px; margin-top: 2px; grid-column: 2; }
+.opt .marker {
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.08em; padding: 3px 8px;
+  border-radius: 999px; text-align: center;
+  align-self: center;
+}
+.opt.chosen { background: rgba(120,140,93,0.10); }
+.opt.chosen .marker { background: var(--olive); color: var(--white); }
+.opt.rejected .marker {
+  background: var(--white); color: var(--gray-500);
+  border: 1px solid var(--gray-300);
+}
+.opt.rejected strong { color: var(--gray-700); }
+
+.because, .tradeoff {
+  font-size: 14.5px; line-height: 1.55; margin: 8px 0 0;
+}
+.because .kw, .tradeoff .kw {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gray-500); margin-right: 6px;
+}
+
+.dead-end {
+  background: var(--oat);
+  border-left: 3px solid #B8AC92;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+}
+.de-label {
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.08em; color: var(--gray-700);
+  background: var(--white); padding: 2px 8px; border-radius: 999px;
+  display: inline-block; margin-bottom: 8px;
+}
+.de-what { font-size: 14.5px; color: var(--slate); margin: 0 0 6px; }
+.de-why { font-size: 14px; color: var(--gray-700); margin: 0; }
+.de-why .kw {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gray-500); margin-right: 6px;
+}
+
+.open-list { list-style: none; padding: 0; margin: 0; }
+.open-list li {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-300);
+  font-size: 14.5px;
+}
+.open-list li:last-child { border-bottom: none; }
+.q-tag {
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.08em; color: var(--clay);
+  background: rgba(217,119,87,0.10);
+  padding: 2px 8px; border-radius: 999px;
+  margin-right: 10px;
+}
+.q-owner {
+  font-family: var(--mono); font-size: 12px;
+  color: var(--gray-500); margin-left: 8px;
+}
+
+.ref-list { list-style: none; padding: 0; margin: 0; }
+.ref-list li { margin-bottom: 8px; }
+.ref-badge {
+  display: inline-flex; align-items: baseline; gap: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: var(--white);
+  text-decoration: none;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+.ref-badge:hover { border-color: var(--gray-500); }
+.ref-badge .src {
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gray-500);
+}
+.ref-badge .key { font-family: var(--mono); font-size: 12.5px; color: var(--slate); }
+.ref-badge .title { color: var(--gray-700); }
+
+.panel {
+  background: var(--white); border: 1px solid var(--gray-300);
+  border-radius: 10px; padding: 18px 20px;
+}
+.panel-label {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gray-500); margin: 0 0 10px;
+}
+.kf { margin-bottom: 12px; }
+.kf:last-child { margin-bottom: 0; }
+.kf code { font-family: var(--mono); font-size: 13px; color: var(--slate); }
+.kf p { font-size: 13px; margin: 2px 0 0; color: var(--gray-700); }
+
+.code {
+  background: var(--gray-150);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 12px 0;
+}
+
+.two-col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+@media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+p { margin: 0 0 12px; }
+p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="layout">
+    <main>
+      <header>
+        <p class="eyebrow">THREAD RECAP · ARC_AGENT</p>
+        <h1>Opt-in product pre-filter for large catalogs</h1>
+        <div class="meta">
+          <span>Claude Code session</span>
+          <span><strong>2026-05-09</strong></span>
+          <span><strong>multi-day, ~3 phases</strong> (grilling → planning → implementation)</span>
+          <span>recapped for <strong>arc_agent reviewers</strong></span>
+        </div>
+      </header>
+
+      <section id="tldr" class="tldr">
+        <p>We borrowed the <em>idea</em> of the <code>select_product/</code> prototype — pre-classify every SKU, filter at query time by intersecting customer requirements — and re-designed the schema and flow to fit <code>arc_agent</code>'s constraints. The prior embedding-based RAG was retired because top-K truncation kept losing cold-tail SKUs; we deliberately revisited pre-filtering with closed-domain set classification so recall is reasoned about per-class, not per-K.</p>
+        <p>The decision tree settled on two axes (<strong>Material</strong> set × <strong>Product type</strong> enum), all heights in feet, color participating in filtering, single LLM extraction per proposal, deterministic safety rules, and fail-open on every error. Six commits landed on <code>feat/new_pre_select_approach</code>; Phase 6 (logging) and Phase 7 (eval extension) were intentionally deferred. Independent review returned 0 blockers, 7 fix-worthy concerns, 5 nits.</p>
+      </section>
+
+      <div class="topic-chips">
+        <a class="chip" href="#decisions"><span class="dot"></span>Decisions</a>
+        <a class="chip" href="#dead-ends"><span class="dot"></span>Dead ends</a>
+        <a class="chip" href="#open"><span class="dot"></span>Open questions</a>
+        <a class="chip" href="#refs"><span class="dot"></span>Artifacts</a>
+      </div>
+
+      <h2 id="decisions">Decisions &amp; tradeoffs</h2>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 1</span>
+          <h3>How many axes? — Material × Product type, not 9-tag mixed-axis</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong>Two axes: Material (set, 4 values) + Product type (enum, 9 values)</strong>
+            <span class="opt-note">Material captures the fence system; Product type captures the role. Each axis is closed and reasoned about independently.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Reuse <code>select_product/</code>'s 9-tag scheme as-is</strong>
+            <span class="opt-note">Conflates material (<code>wood</code>, <code>vinyl</code>) with functional role (<code>access_control</code>) on a single axis. Known LLM tag-drift on mixed-axis values.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Three axes: material + tags + spec attributes</strong>
+            <span class="opt-note">Once tags need to be multi-valued (so hinges/latches survive cross-system), tags ≈ a second material set. The third axis collapses into the first two.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> two axes give 100% structural coverage of the catalog with zero drift between roles and materials. Cross-axis-restricted SKUs (e.g. a wood-only decorative hinge) are &lt;2% and fall back acceptably to the dominant role.</p>
+        <p class="tradeoff"><span class="kw">Tradeoff:</span> a single product can't carry conflicting roles — a "gate operator + barbed top arm combo kit" gets the dominant role assigned, not both.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 2</span>
+          <h3>Material domain: 4 closed values, no <code>universal</code> token</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong><code>{wood, chain_link, vinyl, ornamental}</code>; empty set = wildcard</strong>
+            <span class="opt-note"><code>chain_link</code> consolidates galv + colored mesh (color goes on <code>spec.color</code>). <code>ornamental</code> subsumes aluminum / iron.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Add <code>universal</code> as a literal value</strong>
+            <span class="opt-note">"Wildcard" is a semantic property, not a value. A literal <code>universal</code> token forces the prompt to pick between "all four" vs. "universal" with no clear rule.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Split <code>chain_link_galv</code> from <code>chain_link_color</code></strong>
+            <span class="opt-note">Coating is a spec dimension, not a material system. Doubling the axis to capture it leaks color into pre-filter.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> "applicability" is the property we want to filter on, and applicability fits cleanly as set-on-product-side: a hinge with <code>{wood, chain_link, vinyl, ornamental}</code> means "applies to all four", a project commodity with <code>{}</code> means "applies regardless".</p>
+        <p class="tradeoff"><span class="kw">Tradeoff:</span> the value set is fence-industry-closed. Multi-vertical orgs (deck + fence) need an extension to <code>CONTEXT.md</code> first.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 3</span>
+          <h3>Product type: single-valued, 9 enum values</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong>Single-valued: <code>surface | gate | post | gate_hardware | access_control | barbed_wire | accessory | service | material</code></strong>
+            <span class="opt-note">Three groups: form-factor (drives height filter), Q&amp;A-triggered functional roles, and always-pass overhead.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Multi-valued tags alongside Material</strong>
+            <span class="opt-note">Cross-axis SKUs (gate_hardware + access_control) are rare in the fence vertical. Designing for &lt;2% added complexity for negligible recall gain.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Drop <code>barbed_wire</code> — fold into <code>accessory</code></strong>
+            <span class="opt-note">Barbed wire has a strong Q&amp;A trigger ("razor", "barbed top arm") and pairs with a deterministic height-1ft safety rule. Worth its own enum value.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> the LLM is far more reliable on single-value enum classification than on a multi-label structured output, and the failure modes we want to catch (gate without gate_hardware, post too short) all fall out of single-valued routing.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 4</span>
+          <h3>Storage units: feet everywhere, even where the catalog says inches</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong><code>NUMERIC(4,1)</code> in feet for <code>fence_height</code> and <code>post_length</code></strong>
+            <span class="opt-note"><code>Geometry.fence_run_types[*].height</code> is already feet (per <code>prompts/geometry.py</code>). Storing classification fields in feet means zero conversion at any read site.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Inches as storage unit (matching catalog naming convention)</strong>
+            <span class="opt-note">Fence-industry catalogs name SKUs in inches ("96\" post"). Storing in inches mirrors that, but forces a ×12 conversion every time geometry-derived heights flow into the filter.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> a unit-conversion landmine on every read site is exactly the kind of bug that surfaces in production after weeks of working "fine" — better to align the storage unit to the source of truth (geometry) and make classification do the inches→feet conversion at write time only.</p>
+        <p class="tradeoff"><span class="kw">Tradeoff:</span> the classification prompt has to be explicit about reporting feet (decimals OK: 6.0, 6.5, 8.0), and the reviewer has to scan it for unit drift.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 5</span>
+          <h3>One LLM call per proposal — not 3-call union for recall stability</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong>Single low-temperature LLM extraction per proposal + deterministic safety rules</strong>
+            <span class="opt-note">Per consultation run with N proposals: N LLM calls. Safety rules union baselines (<code>{surface, post}</code>, gate→gate_hardware, etc.) compensate for stability the union was buying.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>3-call union extraction (per <code>select_product</code>'s recall mechanism)</strong>
+            <span class="opt-note">Per-proposal × 3 = up to 9 calls per multi-proposal run. Cost scales with proposal count and the union mostly recovers what safety rules can.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> deterministic post-extraction rules absorb the recall-stability that union was buying. The remaining LLM error mode (extracting empty <code>required_materials</code>) is caught by the sanity check + fail-open.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 6</span>
+          <h3>Failed-open everywhere — pre-filter never blocks BOM generation</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong>Any error → return the full pool with a <code>fallback_reason</code></strong>
+            <span class="opt-note">LLM exception, sanity violation (<code>required_materials==[]</code> in a fence-context run), opt-out, or any other exception: log + return all candidates. Same path as <code>pre_filter_enabled=false</code>.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Hard error on extraction failure</strong>
+            <span class="opt-note">Pre-filter is a precision-improving optimization, not a correctness gate. Letting it block BOM generation makes it strictly worse than not having it.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> recall is the load-bearing property — the previous embedding-based RAG was retired specifically because it failed recall silently. We accept that pre-filter occasionally degrades to "no filtering" rather than ever drops a relevant product.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 7</span>
+          <h3>Post height filter: conservative <code>post_length ≥ min(required_heights)</code>, no buried-depth modeling</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong><code>post_length ≥ min(required_heights)</code>, NULL → keep</strong>
+            <span class="opt-note">Only short posts get dropped. Depth-vs-length nuance is delegated to the downstream select LLM.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>1/3 industry rule (<code>post_length ≥ fence_height + ⅓·post_length</code>)</strong>
+            <span class="opt-note">Real catalogs already violate it — the standard 6ft fence + 8' post pairing has ~25% buried, not 33%. Strict enforcement drops legitimate SKUs.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong><code>install_method</code> LLM extraction (dig / drive / surface mount)</strong>
+            <span class="opt-note">Customers rarely state install method explicitly. Adding an LLM signal that misses 80% of the time wasn't worth the prompt complexity.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> burial depth varies by company / install method / region — there's no formula that's right across all orgs. Recall-first is consistent with the rest of the design.</p>
+        <p class="tradeoff"><span class="kw">Tradeoff:</span> a 6ft fence will keep an 18ft post in the pool. The select LLM has to do the right pick.</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 8</span>
+          <h3>Color participates in filtering, with hardware/accessory exempt</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong>Substring match either direction; <code>{gate_hardware, access_control, accessory, service, material}</code> exempt</strong>
+            <span class="opt-note">"Satin Black" ⊃ "Black" survives. NULL on either side = wildcard. A black hinge fits a white fence project.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Exact-string match on color</strong>
+            <span class="opt-note">Catalog colors have decorator words ("Bronze Fine Texture", "Satin Black") that the customer never types verbatim. Exact match drops legitimate SKUs.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Skip color filter entirely (defer to select LLM)</strong>
+            <span class="opt-note">Color is a strong signal when stated. Letting the candidate set carry colors that don't match wastes select-prompt tokens for no benefit.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> when the customer states a color, it's typically a hard constraint on visible surfaces but cosmetic on hidden hardware. The exempt set lines up with "you can't see it from across the yard".</p>
+      </article>
+
+      <article class="decision">
+        <header class="decision-head">
+          <span class="decision-num">DECISION 9</span>
+          <h3>Where filtering runs: in the executor nodes, not in the search node</h3>
+        </header>
+        <ul class="options">
+          <li class="opt chosen">
+            <span class="marker">CHOSEN</span>
+            <strong><code>maybe_pre_filter</code> inside <code>run_consultation_proposals</code> (per-proposal) and <code>run_regenerate_select</code></strong>
+            <span class="opt-note"><code>search_node</code> stays thin: <code>fetch_all_candidates</code> only. Filtering happens just before <code>select_and_calculate</code>.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>Filter inside <code>search_node</code></strong>
+            <span class="opt-note">Per-proposal context (each proposal's description) isn't available in <code>search</code>. Filtering once for all proposals would either over-filter or under-filter for individual proposals.</span>
+          </li>
+          <li class="opt rejected">
+            <span class="marker">REJECTED</span>
+            <strong>SQL-side filter (PostgreSQL <code>&amp;&amp;</code> overlap)</strong>
+            <span class="opt-note">Deferred to v2. 20k Candidates fetched into Python adds hundreds of ms but keeps <code>search</code> and state-shape unchanged. Optimize if measured latency becomes a problem.</span>
+          </li>
+        </ul>
+        <p class="because"><span class="kw">Because:</span> per-proposal filtering matches the per-proposal Q&amp;A signal each one carries. <code>patch_bom</code> and <code>run_regenerate_calculate</code> intentionally skip pre-filter — they don't select from scratch.</p>
+      </article>
+
+      <h2 id="dead-ends">Dead ends</h2>
+
+      <div class="dead-end">
+        <span class="de-label">TRIED</span>
+        <p class="de-what">Treating the existing <code>select_product/</code> prototype's 9-tag scheme as the reference for arc_agent's pre-filter.</p>
+        <p class="de-why"><span class="kw">Why we stopped:</span> the prototype's 9 tags mix material with role on a single axis. LLM tag drift on mixed-axis values is documented as a known failure (<code>select_product/EXPERIMENT.md</code> Phase 7.5). The reusable insight was the <em>shape</em> (closed-domain set classification + intersection at query time), not the schema.</p>
+      </div>
+
+      <div class="dead-end">
+        <span class="de-label">TRIED</span>
+        <p class="de-what">Adding a separate multi-valued <code>tags</code> field next to <code>material</code> for cross-system items like hinges, latches, gate hardware.</p>
+        <p class="de-why"><span class="kw">Why we stopped:</span> once the <code>tags</code> set is multi-valued for cross-system support, it duplicates the structure of <code>material</code>. Better to put functional roles inside <code>product_type</code> as accessory subclasses (<code>gate_hardware</code>, <code>access_control</code>, <code>barbed_wire</code>).</p>
+      </div>
+
+      <div class="dead-end">
+        <span class="de-label">TRIED</span>
+        <p class="de-what">Hooking classification onto <code>upsert_product_library</code> (the catalog sync HTTP path) so newly-synced products are immediately filterable.</p>
+        <p class="de-why"><span class="kw">Why we stopped:</span> would block the sync HTTP path on slow LLM calls. We took the embeddings-pattern path instead: async backfill + a periodic scan for <code>classified_at IS NULL</code> rows. New products fall through as wildcards until classified.</p>
+      </div>
+
+      <div class="dead-end">
+        <span class="de-label">TRIED</span>
+        <p class="de-what">Encoding a buried-depth rule (1/3 industry standard, fixed +24" assumption, <code>install_method</code> LLM extraction).</p>
+        <p class="de-why"><span class="kw">Why we stopped:</span> every concrete formula either over-filters real catalogs (strict 1/3 drops the standard 6ft + 8' post pairing) or requires a customer-stated <code>install_method</code> that's almost never explicit. The conservative <code>post_length ≥ min(heights)</code> got us recall safety; depth nuance moved to the select LLM.</p>
+      </div>
+
+      <div class="dead-end">
+        <span class="de-label">TRIED</span>
+        <p class="de-what">Storing classification heights in inches to match catalog naming convention.</p>
+        <p class="de-why"><span class="kw">Why we stopped:</span> <code>Geometry.fence_run_types[*].height</code> is in feet. An inch-storage choice would put a ×12 conversion landmine on every read site (filter, sanity check, geometry override). We standardized on feet across schema, candidate, prompt, and filter.</p>
+      </div>
+
+      <div class="dead-end">
+        <span class="de-label">TRIED</span>
+        <p class="de-what">Embedding-based RAG (LLM-generated queries + pgvector top-K). This was retired <em>before</em> this thread but is the failure mode we were specifically avoiding.</p>
+        <p class="de-why"><span class="kw">Why we stopped:</span> top-K truncation silently dropped relevant cold-tail SKUs. The failure mode was recall, not retrieval cost. Set-intersection on closed-domain classes makes recall reasoning per-class instead of trusting a black-box <code>K</code>.</p>
+      </div>
+
+      <h2 id="open">Open questions / known concerns</h2>
+
+      <p>Independent code review returned <strong>0 blockers</strong>. Items below are worth resolving but don't block merge.</p>
+
+      <ul class="open-list">
+        <li>
+          <span class="q-tag">FIX</span>
+          Per-proposal <code>_is_pre_filter_enabled</code> SELECT inside <code>asyncio.gather</code> — N proposals = N concurrent SELECTs for the same row. Read once in <code>run_consultation_proposals_node</code> and pass the bool through.
+          <span class="q-owner">→ small cleanup commit</span>
+        </li>
+        <li>
+          <span class="q-tag">FIX</span>
+          Doc comment in <code>_extract_requirements</code> claims sanity check short-circuits the LLM call for empty Q&amp;A — it doesn't (sanity check runs after extract). Fix the comment or add the actual short-circuit.
+        </li>
+        <li>
+          <span class="q-tag">FIX</span>
+          <code>ARRAY(String)</code> in the model vs <code>ARRAY(Text())</code> in the migration — functionally equivalent in PG, but autogenerate will flag spurious diffs on the next alembic revision.
+        </li>
+        <li>
+          <span class="q-tag">FIX</span>
+          <code>composite</code> appears in <code>_METAL_GATE_FRAME_MATERIALS</code> (per ADR rule 3) but the canonical 4-material domain has no <code>composite</code>. Either drop from ADR or extend material domain.
+        </li>
+        <li>
+          <span class="q-tag">FIX</span>
+          <code>_FUNCTIONAL_CLIENT_GATED</code> is defined but never read — dead code.
+        </li>
+        <li>
+          <span class="q-tag">FIX</span>
+          Bare <code>except Exception</code> in <code>test_product_classification.py:81</code> silently maps SQLAlchemy internals to <code>{}</code> — could let bugs pass tests as "no values asserted". Narrow or remove.
+        </li>
+        <li>
+          <span class="q-tag">DEFER</span>
+          Hard-coded <code>get_llm("gemini-3-flash-preview", "minimal")</code> in <code>pre_filter.py</code> — not threaded through <code>BomStageName</code>. Add a <code>pre_filter</code> stage or document the carve-out.
+        </li>
+        <li>
+          <span class="q-tag">DEFER</span>
+          Phase 5 admin endpoints reuse <code>verify_internal_service_token</code> (the only auth gate that exists). Decide whether opt-in toggles need a stricter human-admin path before production rollout.
+        </li>
+        <li>
+          <span class="q-tag">DEFER</span>
+          Phase 6 (structured logging on <code>pre_filter.applied</code>) and Phase 7 (eval extension with <code>pre_filter_recall</code>) skipped. Means flying blind on observability and attribution at first opt-in. Consider adding before any production org goes live.
+        </li>
+      </ul>
+
+      <h2 id="refs">Artifacts &amp; references</h2>
+
+      <div class="two-col">
+        <aside class="panel">
+          <p class="panel-label">FILES TOUCHED — DOCS</p>
+          <div class="kf"><code>CONTEXT.md</code><p>Workspace-level glossary. Created. Defines Material, Product type, Pre-filter, Applicability semantics.</p></div>
+          <div class="kf"><code>docs/adr/0002-product-pre-filter.md</code><p>The decisions captured here, plus 8+ rejected alternatives. Created.</p></div>
+          <div class="kf"><code>arc_agent/plans/product_pre_filter_plan.md</code><p>File-by-file execution plan, 8 phases. Created.</p></div>
+          <div class="kf"><code>arc_agent/plans/README.md</code><p>Registered the plan in the spec↔plan mapping table.</p></div>
+        </aside>
+
+        <aside class="panel">
+          <p class="panel-label">FILES TOUCHED — CODE (6 commits, branch <code>feat/new_pre_select_approach</code>)</p>
+          <div class="kf"><code>apps/api/alembic/versions/20260508_…_product_pre_filter_classification.py</code><p>Phase 0. 5 columns on <code>products</code>, opt-in flag on <code>org_profiles</code>.</p></div>
+          <div class="kf"><code>apps/shared/src/arcsite_shared/models.py</code> · <code>types.py</code> · <code>catalog.py</code><p>Phase 0 + 1. Product / OrgProfile fields, Candidate exposure, list_all_products SELECT.</p></div>
+          <div class="kf"><code>apps/api/src/api/services/product_classification.py</code><p>Phase 2. Async batched LLM classifier (50/batch, concurrency 5). Mirrors product_backfill.</p></div>
+          <div class="kf"><code>apps/agent/src/agent/pre_filter.py</code><p>Phase 3. <code>maybe_pre_filter</code> + safety rules + 4-axis filter. 29 unit tests.</p></div>
+          <div class="kf"><code>apps/agent/src/agent/run_proposals.py</code><p>Phase 4. <code>maybe_pre_filter</code> wired per-proposal in the asyncio.gather fan-out + once in regenerate-select.</p></div>
+          <div class="kf"><code>apps/api/src/api/routers/pre_filter_admin.py</code><p>Phase 5. /admin/orgs/{org_id}/pre_filter/{enable, disable, reclassify, status}.</p></div>
+        </aside>
+      </div>
+
+      <ul class="ref-list" style="margin-top: 24px;">
+        <li>
+          <a class="ref-badge" href="#">
+            <span class="src">GIT</span>
+            <span class="key">7065133</span>
+            <span class="title">Phase 0 — migration + Product/OrgProfile fields</span>
+          </a>
+        </li>
+        <li>
+          <a class="ref-badge" href="#">
+            <span class="src">GIT</span>
+            <span class="key">1e733e9</span>
+            <span class="title">Phase 1 — Candidate exposes 5 classification fields</span>
+          </a>
+        </li>
+        <li>
+          <a class="ref-badge" href="#">
+            <span class="src">GIT</span>
+            <span class="key">8bd11e8</span>
+            <span class="title">Phase 2 — classification service (apps/api)</span>
+          </a>
+        </li>
+        <li>
+          <a class="ref-badge" href="#">
+            <span class="src">GIT</span>
+            <span class="key">f745a38</span>
+            <span class="title">Phase 3 — pre-filter module (apps/agent)</span>
+          </a>
+        </li>
+        <li>
+          <a class="ref-badge" href="#">
+            <span class="src">GIT</span>
+            <span class="key">22f52fa</span>
+            <span class="title">Phase 4 — graph integration (run_proposals.py)</span>
+          </a>
+        </li>
+        <li>
+          <a class="ref-badge" href="#">
+            <span class="src">GIT</span>
+            <span class="key">dee193b</span>
+            <span class="title">Phase 5 — admin endpoints</span>
+          </a>
+        </li>
+      </ul>
+
+    </main>
+
+    <aside class="toc">
+      <p class="toc-label">IN THIS RECAP</p>
+      <a href="#tldr">TL;DR</a>
+      <a href="#decisions">Decisions</a>
+      <a href="#dead-ends">Dead ends</a>
+      <a href="#open">Open questions</a>
+      <a href="#refs">Artifacts</a>
+    </aside>
+
+  </div>
+</div>
+</body>
+</html>

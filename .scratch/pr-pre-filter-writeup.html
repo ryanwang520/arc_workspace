@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PR · 大目录公司的 Opt-in 产品预筛选</title>
+<style>
+:root {
+  --ivory:    #FAF9F5;
+  --slate:    #141413;
+  --clay:     #D97757;
+  --oat:      #E3DACC;
+  --olive:    #788C5D;
+  --gray-150: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --white:    #FFFFFF;
+
+  --serif: ui-serif, Georgia, 'Times New Roman', serif;
+  --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: var(--sans);
+  background: var(--ivory);
+  color: var(--gray-700);
+  line-height: 1.65;
+  margin: 0;
+  padding: 56px 32px 120px;
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: 1040px; margin: 0 auto; }
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+.eyebrow {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gray-500); margin: 0 0 12px;
+}
+h1 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 34px; line-height: 1.2;
+  color: var(--slate); letter-spacing: -0.005em;
+  margin: 0;
+}
+.pr-meta {
+  display: flex; flex-wrap: wrap; gap: 18px;
+  font-family: var(--mono); font-size: 12.5px; color: var(--gray-500);
+  margin-top: 14px;
+}
+.pr-meta strong { color: var(--gray-700); font-weight: 500; }
+.pr-meta .add { color: var(--olive); }
+.pr-meta .del { color: var(--clay); }
+
+h2 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 22px; color: var(--slate);
+  margin: 44px 0 14px;
+  letter-spacing: -0.005em;
+}
+h3 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 17px; color: var(--slate);
+  margin: 18px 0 8px;
+}
+
+p { margin: 0 0 12px; }
+p:last-child { margin-bottom: 0; }
+
+code {
+  font-family: var(--mono); font-size: 13px;
+  background: var(--gray-150); padding: 1px 5px;
+  border-radius: 4px; color: var(--slate);
+}
+
+.tldr {
+  background: var(--gray-150);
+  border-left: 3px solid var(--clay);
+  border-radius: 0 8px 8px 0;
+  padding: 18px 22px;
+  margin: 24px 0 32px;
+}
+.tldr p {
+  font-size: 15.5px; line-height: 1.7; color: var(--slate);
+}
+
+.toc {
+  position: sticky; top: 32px;
+  border-left: 1px solid var(--gray-300);
+  padding-left: 18px;
+  font-size: 13px;
+}
+.toc-label {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gray-500); margin: 0 0 12px;
+}
+.toc a { display: block; padding: 4px 0; color: var(--gray-700); text-decoration: none; }
+.toc a:hover { color: var(--clay); }
+
+.risk-map { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  font-family: var(--mono); font-size: 12.5px; text-decoration: none;
+  border: 1px solid var(--gray-300); color: var(--gray-700);
+  background: var(--white);
+}
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-500); }
+.chip.safe       { background: rgba(120,140,93,0.10); border-color: rgba(120,140,93,0.45); }
+.chip.safe .dot  { background: var(--olive); }
+.chip.medium     { background: var(--oat); }
+.chip.medium .dot{ background: #A89968; }
+.chip.attention  { background: rgba(217,119,87,0.12); border-color: rgba(217,119,87,0.55); }
+.chip.attention .dot { background: var(--clay); }
+.legend {
+  font-family: var(--mono); font-size: 12px; color: var(--gray-500);
+  display: flex; gap: 16px; margin-bottom: 24px;
+}
+.legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+.ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .ba-grid { grid-template-columns: 1fr; } }
+.ba-card {
+  border: 1px solid var(--gray-300);
+  border-radius: 10px; padding: 18px 20px;
+  background: var(--white);
+}
+.ba-card.after { border-color: rgba(120,140,93,0.55); }
+.ba-label {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gray-500); display: block; margin-bottom: 10px;
+}
+.ba-card ul { list-style: none; padding: 0; margin: 0; }
+.ba-card li {
+  padding: 5px 0 5px 14px; position: relative;
+  font-size: 14px; line-height: 1.55;
+}
+.ba-card li::before {
+  content: "·"; position: absolute; left: 0; color: var(--gray-500);
+}
+
+.file {
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  background: var(--white);
+}
+.file-head {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.file-path {
+  font-family: var(--mono); font-size: 13.5px; color: var(--slate);
+  font-weight: 500;
+}
+.file-stat {
+  font-family: var(--mono); font-size: 11.5px; color: var(--gray-500);
+}
+.file-stat .add { color: var(--olive); }
+.file-stat .del { color: var(--clay); }
+.risk-tag {
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.08em; padding: 3px 9px;
+  border-radius: 999px;
+}
+.risk-tag.safe       { background: rgba(120,140,93,0.10); color: #4d6041; border: 1px solid rgba(120,140,93,0.45); }
+.risk-tag.medium     { background: var(--oat); color: #5a4f31; border: 1px solid #B8AC92; }
+.risk-tag.attention  { background: rgba(217,119,87,0.12); color: #8c4727; border: 1px solid rgba(217,119,87,0.55); }
+.file p { font-size: 14.5px; }
+.file ul { font-size: 14.5px; padding-left: 20px; margin: 8px 0; }
+.file li { padding: 3px 0; }
+
+.code {
+  background: var(--gray-150);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 10px 0;
+}
+.code .add { color: var(--olive); display: block; }
+.code .del { color: var(--clay); display: block; }
+
+.focus-list {
+  list-style: none; padding: 0; margin: 0;
+  counter-reset: focus;
+}
+.focus-list li {
+  counter-increment: focus;
+  padding: 12px 14px 12px 48px;
+  border-bottom: 1px solid var(--gray-300);
+  font-size: 14.5px;
+  position: relative;
+}
+.focus-list li:last-child { border-bottom: none; }
+.focus-list li::before {
+  content: counter(focus);
+  position: absolute; left: 14px; top: 12px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gray-150);
+  border: 1px solid var(--gray-300);
+  font-family: var(--mono); font-size: 12px; color: var(--gray-700);
+  display: grid; place-items: center;
+}
+
+.test-list, .rollout-list {
+  list-style: none; padding: 0; margin: 0;
+}
+.test-list li, .rollout-list li {
+  padding: 8px 0; border-bottom: 1px solid var(--gray-300);
+  font-size: 14.5px;
+  display: flex; gap: 12px; align-items: baseline;
+}
+.test-list li:last-child, .rollout-list li:last-child { border-bottom: none; }
+.tag {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em;
+  padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  min-width: 70px; text-align: center;
+}
+.tag.pass { background: rgba(120,140,93,0.10); color: #4d6041; }
+.tag.skip { background: var(--oat); color: #5a4f31; }
+.tag.note { background: rgba(217,119,87,0.10); color: #8c4727; }
+.tag.flag { background: var(--gray-150); color: var(--gray-700); }
+
+.note-card {
+  background: rgba(217,119,87,0.06);
+  border: 1px solid rgba(217,119,87,0.45);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+}
+.note-card .lbl {
+  font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: #8c4727; display: block; margin-bottom: 6px;
+}
+.note-card p { font-size: 14.5px; }
+</style>
+</head>
+<body>
+<div class="page">
+<div class="layout">
+<main>
+
+<header>
+  <p class="eyebrow">PULL REQUEST · ARC_AGENT</p>
+  <h1>大目录公司的 opt-in 产品预筛选</h1>
+  <div class="pr-meta">
+    <span><strong>19</strong> 文件</span>
+    <span><span class="add">+4 260</span> / <span class="del">−29</span></span>
+    <span>分支 <strong>feat/new_pre_select_approach</strong> → <strong>main</strong></span>
+    <span>作者 <strong>@haowei</strong></span>
+    <span><strong>6 个 commit</strong>（Phase 0–5）</span>
+  </div>
+</header>
+
+<section class="tldr" id="tldr">
+  <p><strong>用户可见效果：</strong>给 catalog 在 5k–20k SKU 量级的公司加一个 opt-in 的预筛选环节。开关为 <code>org_profiles.pre_filter_enabled</code>，默认 false——已上线的 org 行为完全不变。开启之后，<code>search</code> 节点仍然加载全量 catalog，但每个 proposal 在调用 <code>select_and_calculate</code> 之前会先按客户在 Q&amp;A 中表达的 <em>material × product_type × height × color</em> 把候选集缩到对应子集，select prompt 的 token 占用和注意力分散都会显著下降。</p>
+  <p>本 PR 实现 ADR <code>0002-product-pre-filter</code> 的 Phase 0–5（schema、分类服务、查询时过滤、graph 集成、admin 端点）。Phase 6（observability）和 Phase 7（eval 扩展）有意延后——见<strong>滚动发布</strong>章节。任何环节出错都 fail-open 退回到全量候选池，pre-filter 不会阻塞 BOM 生成。</p>
+</section>
+
+<h2 id="why">为什么做这件事</h2>
+
+<p>之前的 embedding-based RAG 已经下线，原因是 top-K 截断会悄悄漏掉冷门 SKU——<strong>失败模式是 recall 低</strong>，不是检索成本。但全量 catalog 直接喂进 select LLM，对几千到上万个 SKU 的 catalog 来说有四个问题叠加：context 大、慢、贵、效果差（注意力被无关 SKU 稀释）。</p>
+
+<p>这次的设计是<strong>故意重新审视</strong>预筛选这条路，但用<em>结构上不同</em>的方法：在每个 product 上做闭域集合分类（<code>material</code> × <code>product_type</code>），查询时按 <strong>set intersection</strong> 过滤，而不是 top-K 相似度。这样 recall 是<em>按类</em>论证的——比黑箱 K 更容易讲清楚。<code>select_product/</code> 这个 prototype 在 23 个真实订单 / ~21k 产品上验证过 100% recall；这个 PR 借鉴它的形状，重新设计 schema 和流程贴合 <code>arc_agent</code>。</p>
+
+<h2 id="ba">Before / After</h2>
+
+<div class="ba-grid">
+  <div class="ba-card">
+    <span class="ba-label">BEFORE</span>
+    <ul>
+      <li><code>search_node</code> 加载全量 catalog（最多 ~20k Candidate）</li>
+      <li><code>select_and_calculate</code> 直接看到所有 SKU</li>
+      <li>大目录的 select prompt token 占用 / 注意力分散无法控制</li>
+      <li><code>products</code> 表只有 <code>name, description, unit, embedding</code></li>
+      <li>无 per-org 配置，所有 org 走同一条路</li>
+    </ul>
+  </div>
+  <div class="ba-card after">
+    <span class="ba-label">AFTER</span>
+    <ul>
+      <li><code>search_node</code> 不变，仍加载全量（即过滤的 fallback 安全垫）</li>
+      <li>每个 proposal 在 <code>asyncio.gather</code> 内先过 <code>maybe_pre_filter</code></li>
+      <li>过滤后的子集才进 <code>select_and_calculate</code></li>
+      <li>新增 5 个分类列 + <code>classified_at</code>（feet 单位、TEXT[] material）</li>
+      <li><code>org_profiles.pre_filter_enabled</code> opt-in；admin 端点切换 + 触发 backfill</li>
+      <li>任何错误（LLM 异常 / sanity 失败 / 未启用）→ fail-open 退回全量</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="filemap">文件分布</h2>
+
+<div class="risk-map">
+  <a class="chip attention" href="#f-prefilter"><span class="dot"></span>pre_filter.py</a>
+  <a class="chip attention" href="#f-runproposals"><span class="dot"></span>run_proposals.py</a>
+  <a class="chip medium"    href="#f-classification"><span class="dot"></span>product_classification.py</a>
+  <a class="chip medium"    href="#f-prompts"><span class="dot"></span>prompts/*</a>
+  <a class="chip medium"    href="#f-migration"><span class="dot"></span>alembic migration</a>
+  <a class="chip medium"    href="#f-admin"><span class="dot"></span>pre_filter_admin.py</a>
+  <a class="chip safe"      href="#f-shared"><span class="dot"></span>shared (models / types / catalog)</a>
+  <a class="chip safe"      href="#f-tests"><span class="dot"></span>tests</a>
+  <a class="chip safe"      href="#f-docs"><span class="dot"></span>plans / docs</a>
+</div>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--olive)"></span> 安全（机械改动 / 仅测试）</span>
+  <span><span class="dot" style="background:#A89968"></span> 看一下（新文件，按已有模式）</span>
+  <span><span class="dot" style="background:var(--clay)"></span> 重点看（新逻辑、graph 集成）</span>
+</div>
+
+<h2 id="files">逐文件导读（按阅读顺序）</h2>
+
+<div class="file" id="f-prefilter">
+  <div class="file-head">
+    <span class="file-path">apps/agent/src/agent/pre_filter.py</span>
+    <span class="file-stat"><span class="add">+400</span></span>
+    <span class="risk-tag attention">重点看</span>
+  </div>
+  <p><strong>整个 PR 的大脑</strong>。<code>maybe_pre_filter</code> 是入口；先读 org 的 opt-in flag，把 <code>plan_markdown / proposal_description / user_modification</code> 拼成单段 <code>qa_text</code>，单次 LLM 调用提取 <code>RequiredFilters</code>，再按 ADR 的 4 条 deterministic safety rules 收紧：</p>
+  <ul>
+    <li>baseline ∪= <code>{surface, post}</code>（任何项目都需要）</li>
+    <li>客户提到 gate ⇒ ∪= <code>{gate_hardware}</code>（gate 和 gate 五金永远成对）</li>
+    <li><code>required_materials ∩ {wood, vinyl}</code> 非空且要 gate ⇒ <code>required_materials ∪= {chain_link}</code>（木 / 乙烯门框是镀锌钢）</li>
+    <li>提到 barbed / razor 且 <code>required_heights</code> 非空 ⇒ 每个 h 加上 (h−1)（commercial 7+1 标准）</li>
+  </ul>
+  <p>过滤分四个独立轴 AND 起来，每一轴都<em>对产品侧空值兜底</em>（applicability semantics——空 = 通配）。重点看 <code>_filter_by_height</code> 按 <code>product_type</code> 分发的逻辑，以及 <code>_filter_by_color</code> 对 <code>{gate_hardware, access_control, accessory, service, material}</code> 的豁免（黑色合页能放进白色围栏项目）。</p>
+
+<pre class="code">_FUNCTIONAL_ALWAYS_PASS  = frozenset({"accessory", "service", "material"})
+_FUNCTIONAL_BASELINE_REQ = frozenset({"surface", "post"})
+_COLOR_EXEMPT_TYPES      = frozenset({"gate_hardware", "access_control",
+                                      "accessory", "service", "material"})
+GATE_HEIGHT_TOLERANCE_FT = 1.0
+
+# height 过滤 v1 — recall-first, 仅 surface/gate/post 三档；其它 product_type 一律 pass
+# post 这里只做 post_length &gt;= min(required_heights) 的下界；
+# 不建模埋深，把深度 vs. 长度的判断交给下游 select LLM。</pre>
+
+  <p><strong>geometry 优先：</strong>当 <code>geometry.fence_run_types[*].height</code> 非空时，会覆盖 LLM 提取的 <code>required_heights</code>（确定性高，零非确定性）；只有 geometry 没有 typed fence runs 时才回落到 LLM 提取。</p>
+  <p><strong>fail-open：</strong>LLM 异常 / sanity 失败（<code>required_materials==[]</code> 但 qa_text 非空 / geometry 非空）/ opt-out / 任何意外异常——全部返回全量候选池并附 <code>fallback_reason</code>。</p>
+</div>
+
+<div class="file" id="f-runproposals">
+  <div class="file-head">
+    <span class="file-path">apps/agent/src/agent/run_proposals.py</span>
+    <span class="file-stat"><span class="add">+57</span> / <span class="del">−29</span></span>
+    <span class="risk-tag attention">重点看</span>
+  </div>
+  <p>两个集成点：</p>
+  <ol>
+    <li><code>run_consultation_proposals_node</code>：在 <code>asyncio.gather</code> fan-out 内的 <code>_run_one(focus)</code> 闭包里先调 <code>maybe_pre_filter</code>，再把 <code>result.candidates</code> 传给 <code>select_and_calculate</code>。<strong>每个 proposal 一次过滤、一次 LLM 调用</strong>——并行执行。</li>
+    <li><code>run_regenerate_select_node</code>：单次调用，传 <code>user_modification</code>。</li>
+  </ol>
+  <p><strong>三个节点有意保持不变</strong>：<code>search</code>（继续加载全量做 fallback 池）、<code>patch_bom</code>（直接编辑既有 BOM，不重新 select）、<code>run_regenerate_calculate</code>（复用既有 selections，不需要候选）。这些是 ADR 里明确记录的「pre-filter blind spots」。</p>
+  <div class="note-card">
+    <span class="lbl">REVIEW NOTE</span>
+    <p><code>plan_markdown</code> 取自 <code>request_inputs["consultation_plan"]</code>，与同文件里 <code>_focused_plan</code> 的取法一致；与 <code>context.consultation_plan</code> 语义等价但来源更接近本节点的其它读取——保持与本文件风格统一。</p>
+  </div>
+</div>
+
+<div class="file" id="f-classification">
+  <div class="file-head">
+    <span class="file-path">apps/api/src/api/services/product_classification.py</span>
+    <span class="file-stat"><span class="add">+419</span></span>
+    <span class="risk-tag medium">看一下</span>
+  </div>
+  <p>异步分类服务。Org opt-in 时一次 backfill，之后由 admin 端点（或定时扫描）补跑 <code>classified_at IS NULL</code> 的行。结构镜像 <code>product_backfill.py</code>：50 / batch、并发 5、单批 LLM 调用、Pydantic 结构化输出，单批失败重试 1 次，再失败保持 <code>classified_at = NULL</code>，下次扫描再补。</p>
+  <ul>
+    <li><strong>不挂钩</strong> <code>upsert_product_library</code> 同步路径——避免阻塞同步 HTTP。新同步的产品在分类前以 wildcard 形式参与过滤，与 <code>pre_filter_enabled=false</code> 是同一条路径。</li>
+    <li>验证层：枚举校验（material 限 4 值 / product_type 限 9 值）+ <code>difflib</code> 拼写纠错 + 高度区间裁剪到 [1.0, 30.0] feet——超界设 NULL。</li>
+    <li>新增 <code>since: datetime | None</code> 参数（admin reclassify 端点用），向后兼容。</li>
+  </ul>
+  <div class="note-card">
+    <span class="lbl">DECISION NOTE</span>
+    <p>apps/api 没接 LangChain，沿用同目录其它服务（<code>product_backfill.py</code> / <code>role_alignment.py</code>）的 <code>google-genai</code> 直调写法（<code>response_mime_type="application/json"</code> + <code>response_schema</code>）。结构化输出语义一致，只是 SDK 不同。</p>
+  </div>
+</div>
+
+<div class="file" id="f-prompts">
+  <div class="file-head">
+    <span class="file-path">apps/shared/src/arcsite_shared/llm/prompts/classification.py</span>
+    <span class="file-stat"><span class="add">+316</span></span>
+    <span class="risk-tag medium">看一下</span>
+  </div>
+  <div class="file-head">
+    <span class="file-path">apps/shared/src/arcsite_shared/llm/prompts/pre_filter.py</span>
+    <span class="file-stat"><span class="add">+149</span></span>
+    <span class="risk-tag medium">看一下</span>
+  </div>
+  <p>两个 prompt builder + 两个 Pydantic 输出模型。</p>
+  <ul>
+    <li><strong>classification</strong>：每批最多 50 个产品 → <code>ClassificationBatch</code>。Prompt 主体包括 CONTEXT.md 的 Material（4 值）/ Product type（9 值）schema、围栏行业领域提示（Postmaster ↔ wood post；BCL/GBW → chain_link；MagnaLatch / TruClose → 跨 material 的 gate_hardware；operator/keypad → access_control；welded wire/T-post → accessory；混淆短码 → accessory），以及 5–10 个 few-shot。明确指令：高度统一用 feet（72" → 6.0），颜色 lowercase 通用名。</li>
+    <li><strong>pre_filter</strong>：单参 <code>build_extract_prompt(qa_text)</code>。提取 <code>required_materials / required_product_types / required_heights（feet, fallback only）/ color</code>。注意 baseline 的 <code>{surface, post}</code> 是后置 safety rule 加的，prompt 不让 LLM 自己加。</li>
+  </ul>
+</div>
+
+<div class="file" id="f-migration">
+  <div class="file-head">
+    <span class="file-path">apps/api/alembic/versions/20260508_090000_product_pre_filter_classification.py</span>
+    <span class="file-stat"><span class="add">+95</span></span>
+    <span class="risk-tag medium">看一下</span>
+  </div>
+  <p>纯 additive 迁移：</p>
+  <ul>
+    <li><code>products</code> + 5 列：<code>material TEXT[] NOT NULL DEFAULT '{}'</code>，<code>product_type VARCHAR(32)</code>，<code>fence_height NUMERIC(4,1)</code>（feet）、<code>post_length NUMERIC(4,1)</code>（feet）、<code>color VARCHAR(32)</code>、<code>classified_at TIMESTAMPTZ</code></li>
+    <li><code>products</code> + 2 索引：<code>GIN(material)</code>、<code>(org_id, product_type)</code> B-tree</li>
+    <li><code>org_profiles</code> + 1 列：<code>pre_filter_enabled BOOLEAN NOT NULL DEFAULT false</code></li>
+    <li>已验证 <code>upgrade head → downgrade -1 → upgrade head</code> 在隔离 DB 上 clean</li>
+  </ul>
+  <p><strong>单位选择 feet</strong>：<code>Geometry.fence_run_types[*].height</code> 已经是 feet（per <code>prompts/geometry.py</code>），整条 pipeline 单位统一，避免任何读侧 ×12 转换的 landmine。catalog 命名习惯是英寸——只在 classification 写入侧做 inches→feet 一次性转换。</p>
+</div>
+
+<div class="file" id="f-admin">
+  <div class="file-head">
+    <span class="file-path">apps/api/src/api/routers/pre_filter_admin.py</span>
+    <span class="file-stat"><span class="add">+255</span></span>
+    <span class="risk-tag medium">看一下</span>
+  </div>
+  <div class="file-head">
+    <span class="file-path">apps/api/src/api/schemas/pre_filter_admin.py</span>
+    <span class="file-stat"><span class="add">+62</span></span>
+  </div>
+  <p>四个端点：</p>
+<pre class="code">POST /admin/orgs/{org_id}/pre_filter/enable      → 翻 flag + fire-and-forget classify_products_async
+POST /admin/orgs/{org_id}/pre_filter/disable     → 翻 flag（保留既有 classifications）
+POST /admin/orgs/{org_id}/pre_filter/reclassify  → body { since: datetime|null } 重跑分类
+GET  /admin/orgs/{org_id}/pre_filter/status      → { enabled, total, classified, oldest_classified_at }</pre>
+  <p>用 <code>asyncio.create_task</code> + 强引用 set + done callback 做 fire-and-forget（沿用本仓库既有写法，<code>BackgroundTasks</code> 当前未在 apps/api 出现）。</p>
+  <div class="note-card">
+    <span class="lbl">AUTH 选择</span>
+    <p>apps/api 现在没有 admin-user 概念，只有 <code>verify_internal_service_token</code>（service-to-service bearer）。<strong>Phase 5 选择搭这个现成的 gate</strong>。如果合并前希望对 opt-in 切换增加更严格的人工 admin 路径，请在 review 时点出，单独 PR 加。</p>
+  </div>
+</div>
+
+<div class="file" id="f-shared">
+  <div class="file-head">
+    <span class="file-path">apps/shared/src/arcsite_shared/models.py / types.py / catalog.py</span>
+    <span class="file-stat"><span class="add">+57</span> / <span class="del">−0</span></span>
+    <span class="risk-tag safe">安全</span>
+  </div>
+  <ul>
+    <li><code>models.py</code>：<code>Product</code> 新增 5 列 + <code>classified_at</code>，<code>OrgProfile</code> 新增 <code>pre_filter_enabled</code>。SQLAlchemy 2.x <code>Mapped[...]</code>，高度类型 <code>Decimal | None</code>。</li>
+    <li><code>types.py</code>：<code>Candidate</code> 同步 5 个分类字段（高度 <code>float | None</code>），默认值都是 wildcard 语义。<code>CandidatePayload</code> TypedDict 同步。</li>
+    <li><code>catalog.py</code>：<code>list_all_products</code> 的 SELECT 加 5 列；构造 <code>Candidate</code> 时把 <code>Decimal → float</code>，让下游 pipeline 单位 / 类型一致。</li>
+  </ul>
+  <p>所有改动都是 additive，旧 <code>Candidate(name=...)</code> 调用点完全兼容（默认值即 wildcard）。</p>
+</div>
+
+<div class="file" id="f-tests">
+  <div class="file-head">
+    <span class="file-path">apps/agent/tests/test_pre_filter.py</span>
+    <span class="file-stat"><span class="add">+652</span></span>
+    <span class="risk-tag safe">安全</span>
+  </div>
+  <div class="file-head">
+    <span class="file-path">apps/api/tests/test_product_classification.py</span>
+    <span class="file-stat"><span class="add">+500</span></span>
+    <span class="risk-tag safe">安全</span>
+  </div>
+  <div class="file-head">
+    <span class="file-path">apps/api/tests/test_pre_filter_admin.py</span>
+    <span class="file-stat"><span class="add">+344</span></span>
+    <span class="risk-tag safe">安全</span>
+  </div>
+  <div class="file-head">
+    <span class="file-path">apps/agent/tests/test_run_consultation_proposals.py / test_run_regenerate_select.py</span>
+    <span class="file-stat"><span class="add">+231</span></span>
+    <span class="risk-tag safe">安全</span>
+  </div>
+  <p>新增 4 个测试文件 + 扩展 2 个既有文件。pre-filter 模块 29 个用例覆盖每条 safety rule、每个 axis 的 wildcard 路径、geometry override、failure paths；分类服务 8 个用例 mock LLM 验证持久化、枚举校验、重试；admin 端点 9 个用例覆盖 4 个端点 + auth gate。</p>
+</div>
+
+<div class="file" id="f-docs">
+  <div class="file-head">
+    <span class="file-path">plans/product_pre_filter_plan.md / plans/README.md</span>
+    <span class="file-stat"><span class="add">+744</span></span>
+    <span class="risk-tag safe">安全</span>
+  </div>
+  <p>执行计划。配套的 <strong>workspace 级 ADR</strong>（<code>../../docs/adr/0002-product-pre-filter.md</code>）和 <strong>workspace 级 CONTEXT.md</strong>（Material / Product type / Pre-filter / Applicability semantics 词条）在 workspace 仓库另跟。</p>
+</div>
+
+<h2 id="focus">Review 时往哪儿看</h2>
+
+<ol class="focus-list">
+  <li><strong>重点看 <code>pre_filter.py</code> 的 <code>_apply_safety_rules</code></strong>——4 条规则对应 ADR 的 4 条；特别注意 barbed wire 的 (h−1) 是否 dedup、是否有 floor。</li>
+  <li><strong>重点看 <code>pre_filter.py</code> 的 <code>_filter_by_height</code></strong>——按 <code>product_type</code> 分发；surface 走精确匹配、gate 走 ±1 ft tolerance、post 走 ≥ min。三个分支各自 NULL 都返回 keep。</li>
+  <li><strong>重点看 <code>run_proposals.py</code></strong>——确认 <code>maybe_pre_filter</code> 在 <code>asyncio.gather</code> 内（每 proposal 并行），不是在 gather 外（串行预热）。</li>
+  <li>看一下 admin auth gate 的选择是否能接受（搭 <code>verify_internal_service_token</code>，没有专门的人工 admin gate）。</li>
+  <li>看一下 migration 的 down/up 对称性 —— 我已经在隔离 DB 上跑过 up→down→up，但 review 时再扫一眼放心。</li>
+  <li><strong>跳过 tests / plans / docs</strong>——机械改动，CI 全绿即可。</li>
+</ol>
+
+<h2 id="test">测试情况</h2>
+
+<ul class="test-list">
+  <li><span class="tag pass">PASS</span><div><code>apps/agent</code> 全套测试（<strong>300 / 300</strong>），含 pre_filter 29、run_consultation_proposals + run_regenerate_select 各 2 条新用例</div></li>
+  <li><span class="tag pass">PASS</span><div><code>apps/api</code> 全套测试（<strong>185 / 185</strong>），含 product_classification 8、pre_filter_admin 9 条新用例</div></li>
+  <li><span class="tag pass">PASS</span><div><code>make lint</code> ——ty + ruff + web lint/fmt 全绿</div></li>
+  <li><span class="tag pass">PASS</span><div>Alembic 在隔离 DB 上 <code>upgrade head → downgrade -1 → upgrade head</code> 全部 clean</div></li>
+  <li><span class="tag skip">SKIP</span><div>E2E eval（<code>uv run python eval/run.py --all</code>）需要 <code>GEMINI_API_KEY</code>，本机未跑；非 opt-in org 路径未变，预期不会 regress</div></li>
+  <li><span class="tag note">NOTE</span><div>Phase 6 logging / Phase 7 eval 扩展<strong>有意延后</strong>（见<a href="#rollout">滚动发布</a>）</div></li>
+</ul>
+
+<h2 id="rollout">滚动发布</h2>
+
+<p>这是一个完全 opt-in 的功能，默认 <code>pre_filter_enabled=false</code>。合并后<strong>所有现有 org 的行为不变</strong>，可以放心合入。</p>
+
+<h3>启用一个 org 的标准流程</h3>
+
+<ul class="rollout-list">
+  <li><span class="tag flag">STEP 1</span><div>选最小的 opt-in 候选 org</div></li>
+  <li><span class="tag flag">STEP 2</span><div>POST <code>/admin/orgs/{org_id}/pre_filter/enable</code>——会 fire-and-forget 后台分类（参考成本：1k 产品约 $0.50 / ~3 分钟，17k 产品约 $3 / ~6 分钟）</div></li>
+  <li><span class="tag flag">STEP 3</span><div>GET status 直到 <code>classified ≈ total</code>（≥95%）；手工抽 10 行验证 <code>(name, material, product_type)</code></div></li>
+  <li><span class="tag flag">STEP 4</span><div>真实 query 流量自动开始走预筛选；监控 BOM <code>missed_products</code> 与启用前两周对照</div></li>
+</ul>
+
+<h3>风险隔离</h3>
+
+<ul>
+  <li><strong>fail-open 是承重设计</strong>——LLM 异常 / sanity 失败 / DB 故障 / 任何意外 ⇒ 退回到全量候选池（与 opt-out 同路径）。pre-filter 不会阻塞 BOM 生成。</li>
+  <li><strong>新同步未分类的产品</strong>以 wildcard 参与，precision 短期下降而<em>非</em> recall 下降。</li>
+  <li><strong><code>patch_bom</code> 是已知盲区</strong>——它直接编辑既有 BOM，不需要候选池。ADR 里有记录。</li>
+</ul>
+
+<h3>有意延后的事</h3>
+
+<div class="note-card">
+  <span class="lbl">DEFERRED</span>
+  <p><strong>Phase 6（结构化日志）和 Phase 7（eval 扩展）暂未实现。</strong>意思是：第一个 opt-in org 上线时，会暂时缺少 <code>pre_filter.applied</code> 的结构化指标和 <code>pre_filter_recall</code> 的归因。开任何生产 org 之前，建议先把 Phase 6 加上（10 分钟改动），这样 fallback 率有 alert。</p>
+</div>
+
+<h3>独立代码审查反馈</h3>
+
+<p>独立 code review 返回 <strong>0 blocker</strong>，但有 7 项建议在合并前修一下（每项都很小）：</p>
+<ul>
+  <li><code>_is_pre_filter_enabled</code> 的 SELECT 在 <code>asyncio.gather</code> 内 N 次并发——读一次后通过参数传入</li>
+  <li><code>_extract_requirements</code> 的 docstring 与实际不符（声称 short-circuit empty Q&amp;A，其实没有）——改注释或加 short-circuit</li>
+  <li><code>ARRAY(String)</code>（model）vs <code>ARRAY(Text())</code>（migration）不一致——下次 autogenerate 会有 spurious diff</li>
+  <li><code>_METAL_GATE_FRAME_MATERIALS</code> 包含 <code>composite</code>，但 4 值 material 域里没有——dead code</li>
+  <li><code>_FUNCTIONAL_CLIENT_GATED</code> 已定义但未使用</li>
+  <li><code>test_product_classification.py:81</code> 的 bare <code>except Exception</code> 会吞 SQLAlchemy 内部异常</li>
+  <li><code>get_llm("gemini-3-flash-preview", "minimal")</code> 没走 <code>BomStageName</code> 系统——延后 Phase 6 / Phase 7 一起处理</li>
+</ul>
+
+<p style="margin-top:24px; color: var(--gray-500); font-size: 13px; font-family: var(--mono);">配套：ADR <code>docs/adr/0002-product-pre-filter.md</code> · 计划 <code>plans/product_pre_filter_plan.md</code> · 词条 <code>CONTEXT.md</code></p>
+
+</main>
+
+<aside class="toc">
+  <p class="toc-label">本 PR 目录</p>
+  <a href="#tldr">TL;DR</a>
+  <a href="#why">为什么做</a>
+  <a href="#ba">Before / After</a>
+  <a href="#filemap">文件分布</a>
+  <a href="#files">逐文件导读</a>
+  <a href="#focus">往哪儿看</a>
+  <a href="#test">测试情况</a>
+  <a href="#rollout">滚动发布</a>
+</aside>
+
+</div>
+</div>
+</body>
+</html>
