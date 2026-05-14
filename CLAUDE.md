@@ -15,9 +15,16 @@ The four ArcSite sub-repos:
 | `cloudservice/`     | ArcSite main cloud backend + React `admin-frontend/`                                      | Django + SQLAlchemy/Alembic (uv), MySQL; admin uses Bun |
 | `arc_dep_cluster/`  | Ansible + Docker Swarm deployment/infra for the whole application stack (test / prod)     | Ansible, Docker Swarm, AWS ECR, Graylog, Datadog        |
 
-`documenso/` is also present but is a **vendored external project** (the open-source Documenso e-signing app — Remix + npm + Turbo). It is not part of ArcSite, has its own `CLAUDE.md`, and is gitignored at the workspace root. Treat it as reference/source-available code; do not change it as part of ArcSite work.
+Other top-level directories — each its own independent git repo, gitignored at the workspace root, **not** part of the four ArcSite sub-repos:
 
-> The workspace root itself is a thin git repo that `.gitignore`s every sub-repo (including `documenso/`) — it only tracks this file and workspace metadata. `git status` / `git log` here will not reflect changes inside the sub-repos; `cd` into the sub-repo to use git.
+| Directory            | Role                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `skills/`            | Workspace's custom Claude Code skills (`engineering/` + `html-artifacts/` buckets). Shared content under `html-artifacts/_shared/` is propagated into each skill by `scripts/sync-shared.sh`. See its own `CLAUDE.md` for layout rules. |
+| `artifacts-gallery/` | Internal hub for publishing the HTML produced by the `html-*` skills above. Bun + Hono backend + React 19 SPA, own `deploy.yml`. Has its own `CONTEXT.md` (Artifact / Revision / Author) — independent from the workspace-root one. |
+| `select_product/`    | **Retired** product pre-filter prototype (FastAPI + Postgres, ~21k products across 4 onboarded fence companies). Informed ADR 0002 but is **not active code** — its architecture was borrowed and its terminology (`粗筛`, 9 mixed-axis "labels", `chain_link_galvanized` vs `chain_link_color`) was deliberately dropped. Kept for historical reference only.                |
+| `documenso/`         | **Vendored external project** (open-source Documenso e-signing app — Remix + npm + Turbo). Not part of ArcSite; has its own `CLAUDE.md`. Treat as reference / source-available code; do not modify as part of ArcSite work.                            |
+
+> The workspace root itself is a thin git repo that `.gitignore`s every sub-repo and every directory above — it only tracks workspace-level files (`CLAUDE.md`, `CONTEXT.md`, `docs/adr/`). `git status` / `git log` here will not reflect changes inside any of them; `cd` into the relevant directory to use git.
 
 Each sub-repo has its own `CLAUDE.md` (symlinked to `AGENTS.md`) — **read the nested one for anything repo-specific**:
 
@@ -45,4 +52,8 @@ Default canonical vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 
 ### Domain docs
 
-Single-context: `CONTEXT.md` + `docs/adr/` at the workspace root. See `docs/agents/domain.md`.
+Single-context: `CONTEXT.md` + `docs/adr/` at the workspace root. See `docs/agents/domain.md`. Current ADRs:
+
+- `0001-ai-onboarding-plan-driven-rewrite.md` — replaces hardcoded fence question schemas with an LLM-authored plan reviewed by the user before bundle generation (`cloudservice/services/ai_onboarding/`).
+- `0002-product-pre-filter.md` — opt-in catalog pre-filter for large orgs (5k–20k SKUs) in `arc_agent`, using closed-domain set classification (`material` × `product_type`) plus height/color routing. Canonical for the pre-filter design.
+- `0003-catalog-sync-snapshot-reconcile.md` — Celery-beat snapshot reconcile from cloudservice → arc_agent with soft-delete (`deleted_at`); replaces the manual per-row upsert sync.

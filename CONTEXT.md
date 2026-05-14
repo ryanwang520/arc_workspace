@@ -11,7 +11,7 @@ A single SKU in an org's catalog. Belongs to exactly one **Org**.
 _Avoid_: SKU, item, listing.
 
 **Catalog**:
-The full product list owned by one **Org**. A few hundred to ~20k. Authored in **cloudservice** (source of truth); **arc_agent** holds a read-only synced view used for BOM generation. The view is eventually consistent — see `docs/adr/0003-catalog-sync-snapshot-reconcile.md`.
+The full product list owned by one **Org**. A few hundred to ~20k. Authored in **cloudservice** (source of truth); **arc_agent** holds a read-only synced view used for BOM generation. The view is eventually consistent — sync is a Celery-beat **snapshot reconcile**: each tick PUTs the full active product list; rows missing from the payload get `deleted_at` set (soft-delete), and a previously-deleted `uuid` reappearing clears it. See `docs/adr/0003-catalog-sync-snapshot-reconcile.md`.
 
 **Org**:
 A fence company using ArcSite. Each org has its own independent **Catalog**.
@@ -46,8 +46,8 @@ The single role a **Product** plays in a fence project. Closed value domain (9 v
 ### Pre-filter
 
 **Pre-filter**:
-An opt-in catalog reduction step that runs before the BOM-generation LLM sees candidates. Trims a large catalog (orgs above ~3k products) to a smaller candidate set, keyed on the customer's Q&A. Two axes: **Material** set intersection and **Product type** matching. Off by default per org; opt-in only.
-_Avoid_: "粗筛" (loanword from prototype repo), "RAG" (the retired embedding-based retrieval was a different mechanism).
+An opt-in catalog reduction step that runs before the BOM-generation LLM sees candidates. Trims a large catalog (orgs above ~3k products) to a smaller candidate set, keyed on the customer's Q&A. Two **categorization** axes — **Material** set intersection and **Product type** matching — plus two **physical-attribute** axes routed per product type: **height** (`fence_height` / `post_length`, in feet) and **color** (substring match, skipped for hardware / service / material rows). Gated per org by `org_profiles.pre_filter_enabled`; off by default, opt-in only. **Failed-open**: any LLM extraction failure or sanity-check rejection falls back to the full catalog — pre-filter never blocks BOM generation. See `docs/adr/0002-product-pre-filter.md` for the canonical decision (schema, query-time extraction, deterministic safety rules).
+_Avoid_: "粗筛" (loanword from the retired `select_product/` prototype), "RAG" (the retired embedding-based retrieval was a structurally different mechanism — top-K similarity, not closed-domain set intersection).
 
 **Applicability semantics**:
 Convention shared by both pre-filter axes: an **empty value on the product side counts as a wildcard** that matches any requirement. A product with `material: {}` is allowed in projects of any material; a product with `product_type: 'accessory'` is not blocked by functional filtering. The wildcard is on the product side, not on the requirement side.
@@ -57,9 +57,11 @@ Convention shared by both pre-filter axes: an **empty value on the product side 
 - An **Org** owns a **Catalog** of **Products**.
 - A **Product** has zero, one, or many **Material** values.
 - A **Product** has exactly one **Product type**.
-- **Pre-filter** keeps a **Product** when:
-  - `material` is empty OR `material ∩ required_materials ≠ ∅`, AND
-  - `product_type` is in the always-pass set (`accessory`, `service`, `material`) OR `product_type ∈ required_product_types`.
+- **Pre-filter** keeps a **Product** when **all** of the following hold (full routing in ADR 0002):
+  - **material**: `c.material = ∅` OR `c.material ∩ required_materials ≠ ∅`.
+  - **product_type**: `c.product_type ∈ {accessory, service, material}` (always-pass) OR `c.product_type ∈ required_product_types` OR `c.product_type IS NULL`.
+  - **height** (skipped when `required_heights = ∅`; routed by `c.product_type`): `surface` exact match on `fence_height`; `gate` within ±1 ft on `fence_height` or `post_length`; `post` requires `post_length ≥ min(required_heights)`; NULL on the product side keeps the row.
+  - **color**: `req.color = NULL` OR `c.product_type ∈ {gate_hardware, access_control, accessory, service, material}` OR `c.color IS NULL` OR substring match either direction.
 
 ## Example dialogue
 
